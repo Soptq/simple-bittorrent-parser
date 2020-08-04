@@ -18,6 +18,10 @@ def pair_integer(data, start):
     return int(data[start + 1: index]), index + 1
 
 
+def construct_integer(data):
+    return f"i{str(data)}e"
+
+
 def pair_str(data, start):
     if not is_decimal(data[start]):
         raise Exception("Bdecode failed: Pair string failed")
@@ -29,6 +33,10 @@ def pair_str(data, start):
         index += 1
     str_length = int(data[start: index])
     return data[index + 1: index + str_length + 1], index + str_length + 1
+
+
+def construct_str(data):
+    return f"{str(len(data))}:{data}"
 
 
 def pair_list(data, start):
@@ -51,6 +59,20 @@ def pair_list(data, start):
         blist.append(bvalue)
         index = bend
     return blist, index + 1
+
+
+def construct_list(data):
+    bstr = "l"
+    for item in data:
+        if type(item) == int:
+            bstr += construct_integer(item)
+        if type(item) == str:
+            bstr += construct_str(item)
+        if type(item) == list:
+            bstr += construct_list(item)
+        if type(item) == dict:
+            bstr += construct_dict(item)
+    return bstr + "e"
 
 
 def pair_dict(data, start):
@@ -87,6 +109,21 @@ def pair_dict(data, start):
     return bdict, index + 1
 
 
+def construct_dict(data):
+    bstr = "d"
+    for items in data.items():
+        for item in items:
+            if type(item) == int:
+                bstr += construct_integer(item)
+            if type(item) == str:
+                bstr += construct_str(item)
+            if type(item) == list:
+                bstr += construct_list(item)
+            if type(item) == dict:
+                bstr += construct_dict(item)
+    return bstr + "e"
+
+
 def bdecode(data: str):
     """
     Reference: https://wiki.theory.org/BitTorrentSpecification
@@ -108,3 +145,15 @@ def bdecode(data: str):
         return pair_list(data, 0)[0]
     if data[0] == "d":
         return pair_dict(data, 0)[0]
+
+
+def bencode(data):
+    if type(data) == int:
+        return construct_integer(data)
+    if type(data) == str:
+        return construct_str(data)
+    if type(data) == list:
+        return construct_list(data)
+    if type(data) == dict:
+        return construct_dict(data)
+
