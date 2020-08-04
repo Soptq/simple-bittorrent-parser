@@ -19,7 +19,7 @@ def pair_integer(data, start):
 
 
 def construct_integer(data):
-    return f"i{str(data)}e"
+    return f"i{str(data)}e".encode('utf-8')
 
 
 def pair_str(data, start):
@@ -32,11 +32,11 @@ def pair_str(data, start):
             raise Exception("Bdecode failed: Pair string failed")
         index += 1
     str_length = int(data[start: index])
-    return data[index + 1: index + str_length + 1], index + str_length + 1
+    return data[index + 1: index + str_length + 1].encode('utf-8'), index + str_length + 1
 
 
 def construct_str(data):
-    return f"{str(len(data))}:{data}"
+    return f"{str(len(data))}:{data}".encode('utf-8')
 
 
 def pair_list(data, start):
@@ -62,8 +62,9 @@ def pair_list(data, start):
 
 
 def construct_list(data):
-    bstr = "l"
+    bstr = b"l"
     for item in data:
+        item = item.decode('utf-8') if type(item) == bytes else item
         if type(item) == int:
             bstr += construct_integer(item)
         if type(item) == str:
@@ -72,7 +73,7 @@ def construct_list(data):
             bstr += construct_list(item)
         if type(item) == dict:
             bstr += construct_dict(item)
-    return bstr + "e"
+    return bstr + b"e"
 
 
 def pair_dict(data, start):
@@ -110,9 +111,10 @@ def pair_dict(data, start):
 
 
 def construct_dict(data):
-    bstr = "d"
+    bstr = b"d"
     for items in data.items():
         for item in items:
+            item = item.decode('utf-8') if type(item) == bytes else item
             if type(item) == int:
                 bstr += construct_integer(item)
             if type(item) == str:
@@ -121,7 +123,7 @@ def construct_dict(data):
                 bstr += construct_list(item)
             if type(item) == dict:
                 bstr += construct_dict(item)
-    return bstr + "e"
+    return bstr + b"e"
 
 
 def bdecode(data: str):
@@ -137,6 +139,7 @@ def bdecode(data: str):
     :param data: the encoded data
     :return: the parsed data
     """
+    data = data.decode("utf-8") if type(data) == bytes else data
     if is_decimal(data[0]):
         return pair_str(data, 0)[0]
     if data[0] == "i":
@@ -148,6 +151,7 @@ def bdecode(data: str):
 
 
 def bencode(data):
+    data = data.decode("utf-8") if type(data) == bytes else data
     if type(data) == int:
         return construct_integer(data)
     if type(data) == str:
