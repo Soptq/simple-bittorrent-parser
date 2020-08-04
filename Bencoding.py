@@ -1,17 +1,17 @@
 def is_decimal(d):
-    return "0" <= d <= "9"
+    return ord("0") <= d <= ord("9")
 
 
 def pair_integer(data, start):
-    if data[start] != 'i':
+    if data[start] != ord('i'):
         raise Exception("Bdecode failed: Pair integer failed")
-    if data[start + 1] is "-" and data[start + 2] is "0":
+    if data[start + 1] is ord("-") and data[start + 2] is ord("0"):
         raise Exception("Bdecode failed: Pair integer failed")
-    if data[start + 1] is "0" and data[start + 2] is not "e":
+    if data[start + 1] is ord("0") and data[start + 2] is not ord("e"):
         raise Exception("Bdecode failed: Pair integer failed")
 
     index = start + 1
-    while data[index] != "e":
+    while data[index] != ord("e"):
         if index is not start + 1 and not is_decimal(data[index]):
             raise Exception("Bdecode failed: Pair integer failed")
         index += 1
@@ -27,34 +27,34 @@ def pair_str(data, start):
         raise Exception("Bdecode failed: Pair string failed")
 
     index = start + 1
-    while data[index] != ":":
+    while data[index] != ord(":"):
         if not is_decimal(data[index]):
             raise Exception("Bdecode failed: Pair string failed")
         index += 1
     str_length = int(data[start: index])
-    return data[index + 1: index + str_length + 1].encode('utf-8'), index + str_length + 1
+    return data[index + 1: index + str_length + 1], index + str_length + 1
 
 
 def construct_str(data):
-    return f"{str(len(data))}:{data}".encode('utf-8')
+    return str(len(data)).encode('utf-8') + b":" + data
 
 
 def pair_list(data, start):
-    if data[start] != "l":
+    if data[start] != ord("l"):
         raise Exception("Bdecode failed: Pair list failed")
 
     blist = []
     index = start + 1
     while index < len(data):
-        if data[index] == "e":
+        if data[index] == ord("e"):
             break
-        if data[index] == "i":
+        if data[index] == ord("i"):
             bvalue, bend = pair_integer(data, index)
         if is_decimal(data[index]):
             bvalue, bend = pair_str(data, index)
-        if data[index] == "l":
+        if data[index] == ord("l"):
             bvalue, bend = pair_list(data, index)
-        if data[index] == "d":
+        if data[index] == ord("d"):
             bvalue, bend = pair_dict(data, index)
         blist.append(bvalue)
         index = bend
@@ -64,10 +64,9 @@ def pair_list(data, start):
 def construct_list(data):
     bstr = b"l"
     for item in data:
-        item = item.decode('utf-8') if type(item) == bytes else item
         if type(item) == int:
             bstr += construct_integer(item)
-        if type(item) == str:
+        if type(item) == bytes:
             bstr += construct_str(item)
         if type(item) == list:
             bstr += construct_list(item)
@@ -77,7 +76,7 @@ def construct_list(data):
 
 
 def pair_dict(data, start):
-    if data[start] != "d":
+    if data[start] != ord("d"):
         raise Exception("Bdecode failed: Pair dict failed")
 
     current_pointer = "key"
@@ -86,15 +85,15 @@ def pair_dict(data, start):
 
     index = start + 1
     while index < len(data):
-        if data[index] == "e":
+        if data[index] == ord("e"):
             break
-        if data[index] == "i":
+        if data[index] == ord("i"):
             bvalue, bend = pair_integer(data, index)
         if is_decimal(data[index]):
             bvalue, bend = pair_str(data, index)
-        if data[index] == "l":
+        if data[index] == ord("l"):
             bvalue, bend = pair_list(data, index)
-        if data[index] == "d":
+        if data[index] == ord("d"):
             bvalue, bend = pair_dict(data, index)
 
         index = bend
@@ -114,10 +113,9 @@ def construct_dict(data):
     bstr = b"d"
     for items in data.items():
         for item in items:
-            item = item.decode('utf-8') if type(item) == bytes else item
             if type(item) == int:
                 bstr += construct_integer(item)
-            if type(item) == str:
+            if type(item) == bytes:
                 bstr += construct_str(item)
             if type(item) == list:
                 bstr += construct_list(item)
@@ -126,7 +124,7 @@ def construct_dict(data):
     return bstr + b"e"
 
 
-def bdecode(data: str):
+def bdecode(data):
     """
     Reference: https://wiki.theory.org/BitTorrentSpecification
 
@@ -139,25 +137,22 @@ def bdecode(data: str):
     :param data: the encoded data
     :return: the parsed data
     """
-    data = data.decode("utf-8") if type(data) == bytes else data
     if is_decimal(data[0]):
         return pair_str(data, 0)[0]
-    if data[0] == "i":
+    if data[0] == ord("i"):
         return pair_integer(data, 0)[0]
-    if data[0] == "l":
+    if data[0] == ord("l"):
         return pair_list(data, 0)[0]
-    if data[0] == "d":
+    if data[0] == ord("d"):
         return pair_dict(data, 0)[0]
 
 
 def bencode(data):
-    data = data.decode("utf-8") if type(data) == bytes else data
     if type(data) == int:
         return construct_integer(data)
-    if type(data) == str:
+    if type(data) == bytes:
         return construct_str(data)
     if type(data) == list:
         return construct_list(data)
     if type(data) == dict:
         return construct_dict(data)
-

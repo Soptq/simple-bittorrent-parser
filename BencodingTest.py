@@ -8,6 +8,7 @@ class BencodingTest(unittest.TestCase):
         self.assertEqual(bdecode(b"i-3e"), -3)
         self.assertEqual(bdecode(b"i0e"), 0)
         self.assertEqual(bdecode(b"i3221e"), 3221)
+        self.assertEqual(bdecode(b"i123e"), 123)
         with self.assertRaises(Exception):
             bdecode(b"i-0e")
         with self.assertRaises(Exception):
@@ -20,13 +21,16 @@ class BencodingTest(unittest.TestCase):
         self.assertEqual(bencode(3), b"i3e")
         self.assertEqual(bencode(-3), b"i-3e")
         self.assertEqual(bencode(3221), b"i3221e")
+        self.assertEqual(bencode(123), b"i123e")
 
     def test_string(self):
         self.assertEqual(bdecode(b"4:span"), b"span")
         self.assertEqual(bdecode(b"0:"), b"")
+        self.assertEqual(bdecode(b"12:Middle Earth"), b"Middle Earth")
 
         self.assertEqual(bencode(b"span"), b"4:span")
         self.assertEqual(bencode(b""), b"0:")
+        self.assertEqual(bencode(b"Middle Earth"), b"12:Middle Earth")
 
     def test_list(self):
         self.assertEqual(bdecode(b"le"), [])
