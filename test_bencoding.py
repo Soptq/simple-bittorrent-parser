@@ -1,5 +1,5 @@
 import unittest
-from Bencoding import *
+from bencoding import *
 
 
 class BencodingTest(unittest.TestCase):
